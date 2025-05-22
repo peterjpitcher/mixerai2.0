@@ -56,14 +56,22 @@ async function assignSuperadminRole(userId: string, existingUserMetadata: any, s
 async function assignBrandPermissions(userId: string, brandId: string, role: UserRoles, supabase: SupabaseClient<Database>) {
   console.log(`[InviteService] Assigning role '${role}' to user ${userId} for brand ${brandId}`);
   
-  // Map 'admin' (from UserRoles / global context) to 'brand_admin' for user_brand_permissions table
-  const brandPermissionRole = role === 'admin' ? 'brand_admin' : role;
+  // Map 'admin' (from UserRoles / global context) to 'admin' for user_brand_permissions table (temporarily, as 'brand_admin' is the target)
+  // The actual role in user_brand_permissions should be 'admin', 'editor', or 'viewer' as per current DB enum
+  let dbRole: Database['public']['Enums']['user_brand_role_enum'];
+  if (role === 'admin') {
+    dbRole = 'admin'; // Temporarily map intended 'brand_admin' or global 'admin' to 'admin' for the user_brand_permissions table
+  } else if (role === 'editor') {
+    dbRole = 'editor';
+  } else {
+    dbRole = 'viewer';
+  }
   
   const { error } = await supabase
     .from('user_brand_permissions')
-    .upsert({ user_id: userId, brand_id: brandId, role: brandPermissionRole }, { onConflict: 'user_id,brand_id' });
+    .upsert({ user_id: userId, brand_id: brandId, role: dbRole }, { onConflict: 'user_id,brand_id' });
   if (error) throw new Error(`DB_BRAND_PERMISSION_FAIL: ${error.message}`);
-  console.log(`[InviteService] Successfully assigned brand permission (as '${brandPermissionRole}') for user ${userId}, brand ${brandId}.`);
+  console.log(`[InviteService] Successfully assigned brand permission (as '${dbRole}') for user ${userId}, brand ${brandId}.`);
 }
 
 async function finalizeWorkflowUser(

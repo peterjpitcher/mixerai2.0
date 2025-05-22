@@ -112,10 +112,10 @@ export const GET = withRouteAuth(async (request: NextRequest, user: any, context
     let highestRole = 'viewer';
     if (userBrandPermissions.length > 0) {
       for (const permission of userBrandPermissions) {
-        if (permission.role === 'brand_admin') {
-          highestRole = 'brand_admin';
+        if (permission.role === 'admin') {
+          highestRole = 'admin';
           break;
-        } else if (permission.role === 'editor' && highestRole !== 'brand_admin') {
+        } else if (permission.role === 'editor' && highestRole !== 'admin') {
           highestRole = 'editor';
         }
       }
@@ -194,10 +194,12 @@ export const PUT = withRouteAuth(async (request: NextRequest, user: any, context
       const userMetadataAdminUpdates: { [key: string]: any } = {};
       // Global role update
       if (body.role && typeof body.role === 'string') {
-        const validRoles = ['brand_admin', 'editor', 'viewer'];
+        const validRoles = ['admin', 'editor', 'viewer'];
         const requestedRole = body.role.toLowerCase();
         if (validRoles.includes(requestedRole)) {
           userMetadataAdminUpdates.role = requestedRole;
+        } else if (requestedRole === 'brand_admin') {
+            userMetadataAdminUpdates.role = 'admin';
         } else {
           console.warn(`[API /users/[id]] PUT: Invalid global role '${body.role}' requested. Ignoring.`);
         }
@@ -276,14 +278,14 @@ export const PUT = withRouteAuth(async (request: NextRequest, user: any, context
     let highestRoleAfterUpdate = 'viewer'; // Recalculate highest role
     if (finalBrandPermissions && finalBrandPermissions.length > 0) {
       highestRoleAfterUpdate = finalBrandPermissions.reduce((acc, p) => {
-        if (p.role === 'brand_admin') return 'brand_admin';
-        if (p.role === 'editor' && acc !== 'brand_admin') return 'editor';
+        if (p.role === 'admin') return 'admin';
+        if (p.role === 'editor' && acc !== 'admin') return 'editor';
         return acc;
       }, 'viewer');
     }
     if (highestRoleAfterUpdate === 'viewer' && updatedAuthUser.user.user_metadata?.role) {
         const metadataRole = String(updatedAuthUser.user.user_metadata.role).toLowerCase();
-        if (['brand_admin', 'editor'].includes(metadataRole)) highestRoleAfterUpdate = metadataRole;
+        if (['admin', 'editor'].includes(metadataRole)) highestRoleAfterUpdate = metadataRole;
     }
 
     return NextResponse.json({
@@ -320,10 +322,10 @@ export const DELETE = withRouteAuth(async (request: NextRequest, user: any, cont
       );
     }
     
-    // Role check: Only Global Admins can delete users
-    if (!user.user_metadata || user.user_metadata.role !== 'admin') {
+    // Only global admins can delete users
+    if (user.user_metadata?.role !== 'admin') { // Temporarily map brand_admin to admin
       return NextResponse.json(
-        { success: false, error: 'Forbidden: You do not have permission to delete users.' },
+        { success: false, error: 'Not authorized to delete users.' },
         { status: 403 }
       );
     }
@@ -350,7 +352,7 @@ export const DELETE = withRouteAuth(async (request: NextRequest, user: any, cont
               .from('user_brand_permissions')
               .select('user_id')
               .eq('brand_id', workflow.brand_id)
-              .eq('role', 'brand_admin')
+              .eq('role', 'admin' as const)
               .limit(1);
             
             if (brandAdminError) continue; // Skip this workflow if we can't find the brand admin

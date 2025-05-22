@@ -160,7 +160,7 @@ export const POST = withAuth(async (request: NextRequest, user) => {
         .select('brand_id')
         .eq('user_id', user.id)
         .eq('brand_id', body.brand_id)
-        .eq('role', 'brand_admin')
+        .eq('role', 'admin' as const) // Temporarily map brand_admin to admin
         .maybeSingle();
 
       if (permError) {

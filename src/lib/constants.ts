@@ -36,6 +36,9 @@ export const COUNTRIES = [
   { value: "VN", label: "Vietnam" }
 ];
 
+// Constant to represent a global/default claim, not tied to a specific country
+export const CLAIM_COUNTRY_GLOBAL = "__GLOBAL__";
+
 // ISO 639-1 languages (sorted alphabetically)
 export const LANGUAGES = [
   { value: "ar", label: "Arabic" },

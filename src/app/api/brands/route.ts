@@ -125,6 +125,8 @@ const getFallbackBrands = (): FormattedBrand[] => {
   ];
 };
 
+type UserRole = 'admin' | 'editor' | 'viewer'; // Temporary: align with current DB schema
+
 // Authenticated GET handler for brands
 export const GET = withAuth(async (req: NextRequest, user) => {
   try {
@@ -402,7 +404,7 @@ export const POST = withAuth(async (req: NextRequest, user) => {
       const permissionUpserts = resolvedAdminUserIds.map((adminId: string) => ({
         user_id: adminId,
         brand_id: newBrandId as string,
-        role: 'brand_admin' as const
+        role: 'admin' as UserRole,
       }));
 
       const { error: permissionError } = await supabase.from('user_brand_permissions').upsert(permissionUpserts, { onConflict: 'user_id,brand_id' });

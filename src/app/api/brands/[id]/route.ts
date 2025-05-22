@@ -34,6 +34,9 @@ interface VettingAgencyForResponse {
   // Add other fields if the original SupabaseVettingAgency had more that are needed.
 }
 
+// Type for user roles
+type UserRole = 'admin' | 'editor' | 'viewer';
+
 // GET a single brand by ID
 export const GET = withAuth(async (
   request: NextRequest,
@@ -144,7 +147,7 @@ export const GET = withAuth(async (
       .from('user_brand_permissions')
       .select('user_id, profiles (id, full_name, email, avatar_url, job_title)') // Assuming profiles table exists and is linked
       .eq('brand_id', brandId)
-      .eq('role', 'brand_admin');
+      .eq('role', 'admin' as UserRole); // Temporarily map brand_admin to admin
 
     if (adminPermissionsError) {
       console.error('Error fetching brand admins:', adminPermissionsError);
@@ -280,7 +283,7 @@ export const PUT = withAuth(async (
         .from('user_brand_permissions')
         .select('user_id, users:profiles(email)') // Assuming 'profiles' table has email and is referenced as 'users' here
         .eq('brand_id', brandIdToUpdate)
-        .eq('role', 'brand_admin');
+        .eq('role', 'admin' as UserRole); // Temporarily map brand_admin to admin
 
       if (currentAdminsError) throw currentAdminsError;
 
@@ -298,12 +301,12 @@ export const PUT = withAuth(async (
           .delete()
           .in('user_id', userIdsToRemove)
           .eq('brand_id', brandIdToUpdate)
-          .eq('role', 'brand_admin'); // Ensure we only delete 'brand_admin' roles
+          .eq('role', 'admin' as UserRole); // Temporarily map brand_admin to admin
         if (deleteError) throw deleteError;
       }
 
       // Add or invite new admins
-      const upsertOperations: Array<{ user_id: string; brand_id: string; role: 'brand_admin'; }> = [];
+      const upsertOperations: Array<{ user_id: string; brand_id: string; role: UserRole; }> = [];
       for (const email of emailsToAdd) {
         let existingUser: User | null = null;
         let userFetchError: Error | null = null;
@@ -319,7 +322,7 @@ export const PUT = withAuth(async (
           upsertOperations.push({
             user_id: existingUser.id,
             brand_id: brandIdToUpdate,
-            role: 'brand_admin' as const,
+            role: 'admin' as UserRole, // Temporarily map brand_admin to admin
           });
         } else if (userFetchError) {
           // Handle other errors during user fetch
@@ -330,7 +333,7 @@ export const PUT = withAuth(async (
           try {
             const { user: invitedUserObject, error: inviteError } = await inviteNewUserWithAppMetadata(
               email,
-              { role: 'editor', invited_to_brand: brandIdToUpdate, invited_as_brand_role: 'brand_admin' },
+              { role: 'editor', invited_to_brand: brandIdToUpdate, invited_as_brand_role: 'admin' }, // Temporarily map brand_admin to admin
               supabase
             );
 
@@ -341,7 +344,7 @@ export const PUT = withAuth(async (
               upsertOperations.push({
                 user_id: invitedUserObject.id,
                 brand_id: brandIdToUpdate,
-                role: 'brand_admin' as const,
+                role: 'admin' as UserRole, // Temporarily map brand_admin to admin
               });
             } else {
               // This case (no error, no user object) should ideally not happen based on inviteNewUserWithAppMetadata signature if invite is successful

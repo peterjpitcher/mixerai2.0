@@ -38,6 +38,7 @@ This document outlines the target visibility of main navigation items based on u
 | **Users (Management)**   | Yes          | No                       | No                                 | No                                 | User management is restricted to Global Admins.                                                                                                       |
 | **Account**              | Yes          | Yes                      | Yes                                | Yes                                | All authenticated users can manage their own account settings.                                                                                        |
 | **Help**                 | Yes          | Yes                      | Yes                                | Yes                                | Access to help resources for all authenticated users.                                                                                                 |
+| **Claims Management**    | Yes          | Yes                      | No                                 | No                                 | Allows management of product, ingredient, and brand claims.                                                                                           |
 
 This matrix aims to provide a clear guide for the intended navigation structure based on the specified user roles.
 
@@ -77,7 +78,7 @@ This matrix aims to provide a clear guide for the intended navigation structure 
 
 *   **`user_brand_permissions` Table:** Confirm structure (`user_id`, `brand_id`, `role`) and consistent use of role names ('admin', 'editor', 'viewer').
 *   **Row Level Security (RLS):** Crucial for enforcement.
-    *   Implement/Update RLS on `brands`, `content_templates`, `workflows`, `content` tables to match matrix access rights.
+    *   Implement/Update RLS on `brands`, `content_templates`, `workflows`, and `content` tables to match matrix access rights.
     *   *Example RLS for `content_templates` (Global Admin):* `USING (auth.jwt()->>'role' = 'admin') WITH CHECK (auth.jwt()->>'role' = 'admin')`.
     *   *Example RLS for `brands` (Brand Admin access):* `USING (EXISTS (SELECT 1 FROM user_brand_permissions WHERE user_brand_permissions.brand_id = brands.id AND user_brand_permissions.user_id = auth.uid() AND user_brand_permissions.role = 'admin'))` for SELECT, and similar for other operations if they can edit.
 

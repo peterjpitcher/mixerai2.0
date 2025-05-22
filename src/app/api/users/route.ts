@@ -18,7 +18,7 @@ interface ProfileRecord {
   user_brand_permissions?: {
     id: string;
     brand_id: string;
-    role: 'admin' | 'editor' | 'viewer';
+    role: 'admin' | 'editor' | 'viewer' | 'brand_admin';
   }[];
   job_title?: string;
   company?: string;

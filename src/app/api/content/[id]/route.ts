@@ -340,30 +340,31 @@ export const DELETE = withAuth(async (request: NextRequest, user: User, context:
     const targetBrandId = currentContent.brand_id;
 
     if (!targetBrandId) {
-      console.error(`[API Content DELETE] Content item ${id} is missing brand_id. Cannot perform delete operation.`);
+      console.error(`[API Content DELETE] Content item ${id} is missing brand_id.`);
       return NextResponse.json(
         { success: false, error: 'Cannot delete content: Content is not associated with a brand.' },
         { status: 500 }
       );
     }
 
-    // Permission check
     if (globalRole !== 'admin') {
       const { data: permissionsData, error: permissionsError } = await supabase
         .from('user_brand_permissions')
-        .select('role')
+        .select('role') // Only need the role
         .eq('user_id', user.id)
         .eq('brand_id', targetBrandId)
-        .single(); // Expecting one permission record or null
+        .maybeSingle(); // User should have at most one role per brand
 
-      if (permissionsError && permissionsError.code !== 'PGRST116') { // PGRST116 means no rows, which is a valid permission check outcome
+      if (permissionsError) {
         console.error('[API Content DELETE] Error fetching brand permissions for user:', user.id, targetBrandId, permissionsError);
         return handleApiError(permissionsError, 'Failed to verify user permissions for deletion');
       }
 
       const brandRole = permissionsData?.role;
 
-      if (!brandRole || brandRole !== 'brand_admin') {
+      // Temporarily map 'brand_admin' to 'admin' for the check, consistent with other temporary fixes.
+      // The user will update the DB schema and types later.
+      if (!brandRole || brandRole !== 'admin') { 
         console.warn(`[API Content DELETE] User ${user.id} (global role: ${globalRole}, brand role: ${brandRole}) access denied to delete content ${id} for brand ${targetBrandId}.`);
         return NextResponse.json(
           { success: false, error: 'You do not have permission to delete this content.' },

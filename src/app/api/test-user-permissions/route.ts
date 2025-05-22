@@ -18,7 +18,7 @@ export const GET = withAuth(async (request: NextRequest, user) => {
       .from('user_brand_permissions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('role', 'brand_admin')
+      .eq('role', 'admin')
       .maybeSingle();
     
     if (adminCheckError) throw adminCheckError;
@@ -64,7 +64,7 @@ export const GET = withAuth(async (request: NextRequest, user) => {
         metadata_role: authUser.user_metadata?.role || null,
         permissions: userPermissions,
         permission_count: userPermissions.length,
-        has_admin_role: userPermissions.some((p: any) => p.role === 'brand_admin')
+        has_admin_role: userPermissions.some((p: any) => p.role === 'admin')
       };
     });
 

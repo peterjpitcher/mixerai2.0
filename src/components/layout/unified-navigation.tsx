@@ -21,7 +21,11 @@ import {
   ListChecks,
   Loader2,
   MessageSquareWarning,
-  Info
+  Info,
+  Package,
+  Leaf,
+  Eye,
+  Building
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
@@ -53,6 +57,7 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   segment?: string; // Used for active state calculation with segments
+  show?: () => boolean; // Added optional show condition for individual NavItems
 }
 
 interface NavGroupItem {
@@ -249,6 +254,46 @@ export function UnifiedNavigation() {
       show: () => isGlobalAdmin
     },
     {
+      label: 'Claims Management',
+      icon: <ListChecks className="h-5 w-5" />,
+      segment: 'claims',
+      defaultOpen: true,
+      show: () => isGlobalAdmin || isBrandAdmin_NonGlobal || isEditor_BrandAssigned_NonAdmin,
+      items: [
+        {
+          href: '/dashboard/claims/manage',
+          label: 'Manage All Claims',
+          icon: <FileText className="h-4 w-4" />,
+          segment: 'manage'
+        },
+        {
+          href: '/dashboard/claims/products',
+          label: 'Products (Claims Context)',
+          icon: <Package className="h-4 w-4" />,
+          segment: 'products'
+        },
+        {
+          href: '/dashboard/claims/ingredients',
+          label: 'Ingredients (Claims Context)',
+          icon: <Leaf className="h-4 w-4" />,
+          segment: 'ingredients'
+        },
+        {
+          href: '/dashboard/claims/preview',
+          label: 'Claims Preview Tool',
+          icon: <Eye className="h-4 w-4" />,
+          segment: 'preview'
+        },
+        {
+          href: '/dashboard/claims/global-brands',
+          label: 'Global Brands (for Claims)',
+          icon: <Building className="h-4 w-4" />,
+          segment: 'global-brands',
+          show: () => isGlobalAdmin
+        }
+      ]
+    },
+    {
       label: 'Create Content', 
       icon: <BookOpen className="h-5 w-5" />,
       items: contentItems, 
@@ -436,22 +481,31 @@ export function UnifiedNavigation() {
                       }
                     </button>
                     {expandedSections[item.label.toLowerCase()] && (
-                      <div className="pl-6 space-y-1">
-                        {item.items.map((subItem) => (
-                          <Link
-                            key={subItem.href}
-                            href={subItem.href}
-                            className={cn(
-                              'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors',
-                              (segments.includes(subItem.segment || '') || pathname === subItem.href)
-                                ? "bg-primary text-primary-foreground"
-                                : "text-muted-foreground hover:bg-muted hover:text-primary"
-                            )}
-                          >
-                            {subItem.icon}
-                            {subItem.label}
-                          </Link>
-                        ))}
+                      <div className="pl-4 mt-1 space-y-1">
+                        {item.items.map(subItem => {
+                          const isSubItemActive = isActive(subItem);
+
+                          // Check individual show condition for sub-items
+                          if (subItem.show && !subItem.show()) {
+                            return null; // Do not render this sub-item if its show condition is false
+                          }
+
+                          return (
+                            <Link
+                              key={subItem.href}
+                              href={subItem.href}
+                              className={cn(
+                                'flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors',
+                                isSubItemActive
+                                  ? "bg-primary text-primary-foreground"
+                                  : "text-muted-foreground hover:bg-muted hover:text-primary"
+                              )}
+                            >
+                              {subItem.icon}
+                              {subItem.label}
+                            </Link>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

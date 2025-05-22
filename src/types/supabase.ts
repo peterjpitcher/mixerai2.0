@@ -152,6 +152,73 @@ export type Database = {
           },
         ]
       }
+      claims: {
+        Row: {
+          claim_text: string
+          claim_type: Database["public"]["Enums"]["claim_type_enum"]
+          country_code: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          global_brand_id: string | null
+          id: string
+          ingredient_id: string | null
+          level: Database["public"]["Enums"]["claim_level_enum"]
+          product_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          claim_text: string
+          claim_type: Database["public"]["Enums"]["claim_type_enum"]
+          country_code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          global_brand_id?: string | null
+          id?: string
+          ingredient_id?: string | null
+          level: Database["public"]["Enums"]["claim_level_enum"]
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          claim_text?: string
+          claim_type?: Database["public"]["Enums"]["claim_type_enum"]
+          country_code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          global_brand_id?: string | null
+          id?: string
+          ingredient_id?: string | null
+          level?: Database["public"]["Enums"]["claim_level_enum"]
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claims_global_brand_id_fkey"
+            columns: ["global_brand_id"]
+            isOneToOne: false
+            referencedRelation: "global_claim_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claims_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content: {
         Row: {
           assigned_to: string[] | null
@@ -593,6 +660,51 @@ export type Database = {
           },
         ]
       }
+      global_claim_brands: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ingredients: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       invitation_logs: {
         Row: {
           brand_id: string | null
@@ -692,6 +804,77 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_ingredients: {
+        Row: {
+          created_at: string | null
+          ingredient_id: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          ingredient_id: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string | null
+          ingredient_id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_ingredients_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          global_brand_id: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          global_brand_id?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          global_brand_id?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_global_brand_id_fkey"
+            columns: ["global_brand_id"]
+            isOneToOne: false
+            referencedRelation: "global_claim_brands"
             referencedColumns: ["id"]
           },
         ]
@@ -1284,9 +1467,21 @@ export type Database = {
         Args: { user_email: string }
         Returns: unknown[]
       }
+      has_brand_permission: {
+        Args: {
+          user_id: string
+          target_brand_id: string
+          allowed_roles: string[]
+        }
+        Returns: boolean
+      }
       integer_to_uuid: {
         Args: { "": number }
         Returns: string
+      }
+      is_global_admin: {
+        Args: Record<PropertyKey, never> | { user_id: string }
+        Returns: boolean
       }
       set_user_role_for_all_assigned_brands: {
         Args: {
@@ -1334,6 +1529,8 @@ export type Database = {
       }
     }
     Enums: {
+      claim_level_enum: "brand" | "product" | "ingredient"
+      claim_type_enum: "allowed" | "disallowed" | "mandatory"
       content_status:
         | "draft"
         | "pending_review"
@@ -1350,7 +1547,7 @@ export type Database = {
         | "wont_fix"
       feedback_type: "bug" | "enhancement"
       tool_run_status: "success" | "failure"
-      user_brand_role_enum: "brand_admin" | "editor" | "viewer"
+      user_brand_role_enum: "admin" | "editor" | "viewer"
       user_role: "admin" | "editor" | "viewer"
       vetting_agency_priority_level: "High" | "Medium" | "Low"
     }
@@ -1468,6 +1665,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      claim_level_enum: ["brand", "product", "ingredient"],
+      claim_type_enum: ["allowed", "disallowed", "mandatory"],
       content_status: [
         "draft",
         "pending_review",
@@ -1486,7 +1685,7 @@ export const Constants = {
       ],
       feedback_type: ["bug", "enhancement"],
       tool_run_status: ["success", "failure"],
-      user_brand_role_enum: ["brand_admin", "editor", "viewer"],
+      user_brand_role_enum: ["admin", "editor", "viewer"],
       user_role: ["admin", "editor", "viewer"],
       vetting_agency_priority_level: ["High", "Medium", "Low"],
     },

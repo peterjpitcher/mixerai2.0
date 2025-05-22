@@ -72,6 +72,10 @@ Users can view a history of their past runs for AI-powered tools (Alt Text Gener
     - Accessible via `/api/me/tool-run-history` API endpoints.
 - For detailed information, see [Tool Run History Feature Plan](./docs/tool_run_history_feature_plan.md).
 
+### 6. Claims Management
+Provides a system for brand teams to define, manage, and preview marketing claims associated with brands, products, and their ingredients. Supports global and country-specific claims.
+For detailed information, see [Claims Management](./docs/CLAIMS_MANAGEMENT.md).
+
 ## Recent Updates and Feature Details
 
 # MixerAI 2.0 - UI and Authentication Updates
