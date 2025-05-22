@@ -267,14 +267,21 @@ export function UnifiedNavigation() {
           segment: 'manage'
         },
         {
+          href: '/dashboard/claims/global-brands',
+          label: 'Claims Brands',
+          icon: <Building className="h-4 w-4" />,
+          segment: 'global-brands',
+          show: () => isGlobalAdmin
+        },
+        {
           href: '/dashboard/claims/products',
-          label: 'Products (Claims Context)',
+          label: 'Products',
           icon: <Package className="h-4 w-4" />,
           segment: 'products'
         },
         {
           href: '/dashboard/claims/ingredients',
-          label: 'Ingredients (Claims Context)',
+          label: 'Ingredients',
           icon: <Leaf className="h-4 w-4" />,
           segment: 'ingredients'
         },
@@ -284,13 +291,6 @@ export function UnifiedNavigation() {
           icon: <Eye className="h-4 w-4" />,
           segment: 'preview'
         },
-        {
-          href: '/dashboard/claims/global-brands',
-          label: 'Global Brands (for Claims)',
-          icon: <Building className="h-4 w-4" />,
-          segment: 'global-brands',
-          show: () => isGlobalAdmin
-        }
       ]
     },
     {
